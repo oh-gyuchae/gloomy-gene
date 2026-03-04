@@ -43,6 +43,7 @@ export default function Home() {
   const [introState, setIntroState] = useState<"gate" | "scared" | "started">("gate");
   const [authReady, setAuthReady] = useState(false);
   const [authUserId, setAuthUserId] = useState("");
+  const [skipAuth, setSkipAuth] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [nickname, setNickname] = useState("");
   const [theme, setTheme] = useState<ThemeMode>("obsidian");
@@ -217,16 +218,24 @@ export default function Home() {
 
     setLoginError("");
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setLoginError("Google 로그인에 실패했습니다.");
+      if (error) {
+        setLoginError(error.message || "Google 로그인에 실패했습니다.");
+      }
+    } catch {
+      setLoginError("Google 로그인 요청에 실패했습니다.");
     }
+  }
+
+  function handleContinueAsGuest() {
+    setSkipAuth(true);
   }
 
   function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -428,7 +437,7 @@ export default function Home() {
     );
   }
 
-  if (introState === "started" && (!authReady || !authUserId)) {
+  if (introState === "started" && (!skipAuth && (!authReady || !authUserId))) {
     return (
       <div className={`min-h-screen p-6 ${currentThemeClass}`}>
         <main className="mx-auto flex min-h-[80vh] max-w-4xl items-center justify-center">
@@ -451,6 +460,14 @@ export default function Home() {
               >
                 Google로 로그인
               </button>
+              <button
+                className="rounded-xl border border-zinc-500/40 bg-black/20 px-4 py-3 font-semibold"
+                type="button"
+                onClick={handleContinueAsGuest}
+              >
+                계정 없이 계속하기
+              </button>
+              <p className="text-xs text-zinc-400">게스트 모드는 기기(브라우저) 내 저장만 지원합니다.</p>
               {loginError ? <p className="text-sm text-rose-200">{loginError}</p> : null}
             </div>
 

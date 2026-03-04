@@ -46,8 +46,9 @@ GEMINI_MODEL=gemini-1.5-flash
 	- 로컬: `http://localhost:3000`
 	- 프로덕션: `https://gloomy-gene.vercel.app` (또는 본인 도메인)
 - Redirect URLs
-	- `http://localhost:3000/**`
-	- `https://gloomy-gene.vercel.app/**`
+	- `http://localhost:3000/auth/callback`
+	- `https://gloomy-gene.vercel.app/auth/callback`
+	- (커스텀 도메인이 있으면) `https://<your-domain>/auth/callback`
 
 ### 보안 메모
 
