@@ -96,9 +96,28 @@ export async function POST(req: Request) {
   );
 
   if (!response.ok) {
+    const contentType = response.headers.get("content-type") || "";
     const text = await response.text().catch(() => "");
+    let detail = text.slice(0, 800);
+
+    if (contentType.includes("application/json") && text) {
+      try {
+        const parsed: unknown = JSON.parse(text);
+        const message =
+          parsed && typeof parsed === "object"
+            ? // common Google error shapes
+              (parsed as { error?: { message?: unknown } }).error?.message
+            : undefined;
+        if (typeof message === "string" && message.trim()) {
+          detail = message.trim().slice(0, 800);
+        }
+      } catch {
+        // ignore JSON parse errors
+      }
+    }
+
     return NextResponse.json(
-      { error: "Gemini request failed", detail: text.slice(0, 800) },
+      { error: "Gemini request failed", status: response.status, detail },
       { status: 502 },
     );
   }

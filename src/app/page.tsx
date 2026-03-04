@@ -227,7 +227,14 @@ export default function Home() {
       });
 
       if (error) {
-        setLoginError(error.message || "Google 로그인에 실패했습니다.");
+        const raw = error.message || "Google 로그인에 실패했습니다.";
+        if (/Unsupported provider/i.test(raw) || /provider is not enabled/i.test(raw)) {
+          setLoginError(
+            "Supabase에서 Google Provider가 비활성화되어 있습니다. Supabase Dashboard > Authentication > Providers > Google 을 Enable 한 뒤, Redirect URL에 /auth/callback 을 추가해주세요.",
+          );
+        } else {
+          setLoginError(raw);
+        }
       }
     } catch {
       setLoginError("Google 로그인 요청에 실패했습니다.");
@@ -275,14 +282,20 @@ export default function Home() {
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        let payload: { error?: unknown } | null = null;
+        let payload: { error?: unknown; detail?: unknown; status?: unknown } | null = null;
         try {
           const parsed: unknown = text ? JSON.parse(text) : null;
-          payload = parsed && typeof parsed === "object" ? (parsed as { error?: unknown }) : null;
+          payload =
+            parsed && typeof parsed === "object"
+              ? (parsed as { error?: unknown; detail?: unknown; status?: unknown })
+              : null;
         } catch {
           payload = null;
         }
-        setDecomposeError(payload?.error ? String(payload.error) : "원자 행동 분해에 실패했습니다.");
+        const errorText = payload?.error ? String(payload.error) : "원자 행동 분해에 실패했습니다.";
+        const detailText = payload?.detail ? String(payload.detail) : "";
+        const statusText = payload?.status ? ` (status: ${String(payload.status)})` : "";
+        setDecomposeError(detailText ? `${errorText}${statusText}\n${detailText}` : `${errorText}${statusText}`);
         return;
       }
 
