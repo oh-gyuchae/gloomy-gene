@@ -23,7 +23,7 @@ npm run dev
 1. Vercel Environment Variables 설정
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  	- `OPENAI_API_KEY`
+  	- `GEMINI_API_KEY`
 2. Supabase SQL Editor에서 `supabase/schema.sql` 적용
 3. Supabase Authentication > Providers > Google 활성화 (+ Redirect URL 설정)
 

@@ -4,10 +4,12 @@ type DecomposeRequestBody = {
   challengeTitle?: unknown;
 };
 
-type OpenAIChatCompletionsResponse = {
-  choices?: Array<{
-    message?: {
-      content?: unknown;
+type GeminiGenerateContentResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: unknown;
+      }>;
     };
   }>;
 };
@@ -22,12 +24,12 @@ function normalizeLines(items: string[]) {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY is not set" },
+      { error: "GEMINI_API_KEY is not set" },
       { status: 500 },
     );
   }
@@ -56,9 +58,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const system =
-    "You decompose a user's challenge into micro-actions. Output ONLY valid JSON.";
-  const user =
+  const prompt =
     "도전: \"" +
     challengeTitle +
     "\"\n\n" +
@@ -71,36 +71,44 @@ export async function POST(req: Request) {
     "\n" +
     "반환 예시: [\"...\", \"...\"]";
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+      model,
+    )}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
       ],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 512,
+      },
     }),
-  });
+    },
+  );
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     return NextResponse.json(
-      { error: "OpenAI request failed", detail: text.slice(0, 800) },
+      { error: "Gemini request failed", detail: text.slice(0, 800) },
       { status: 502 },
     );
   }
 
-  const json = (await response.json()) as OpenAIChatCompletionsResponse;
-  const content = json.choices?.[0]?.message?.content;
+  const json = (await response.json()) as GeminiGenerateContentResponse;
+  const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (typeof content !== "string") {
     return NextResponse.json(
-      { error: "Invalid OpenAI response" },
+      { error: "Invalid Gemini response" },
       { status: 502 },
     );
   }

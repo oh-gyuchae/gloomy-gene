@@ -28,10 +28,10 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
-# OpenAI (원자 행동 자동 분해)
-OPENAI_API_KEY=...
+# Google Gemini (원자 행동 자동 분해)
+GEMINI_API_KEY=...
 # Optional
-OPENAI_MODEL=gpt-4o-mini
+GEMINI_MODEL=gemini-1.5-flash
 ```
 
 ### Supabase Auth 설정 (Google)
@@ -62,7 +62,7 @@ OPENAI_MODEL=gpt-4o-mini
 3. Environment Variables에 Supabase 키 입력
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-	- `OPENAI_API_KEY`
+	- `GEMINI_API_KEY`
 4. Deploy
 
 ### 방법 B: CLI
